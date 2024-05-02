@@ -1,77 +1,42 @@
-import json
-from typing import List, Dict
-import json
 from pprint import pprint
+import os
 
-"""copilot prompt
-write a function that reads a txt file like the one below and returns a json object with the following structure:
-4 3
-30 20 20 450
-10 50 20 250
-50 40 30 250
-30 20 30 450
-500 600 300
+def main():
+    while True:
+        print("Welcome to an exploration in OpResarch!")
+        print("Choose a file to study:")
 
+        # enumerate files in src/constraints/
+        directory = "/workspaces/OpResearch/src/constraints/"
+        files = os.listdir(directory)
 
-{
-    "lines": 4,
-    "columns": 3,
-    "matrix": [
-        [30, 20, 20],
-        [10, 50, 20],
-        [50, 40, 30],
-        [30, 20, 30]
-    ],
-    "provisons": [450, 250, 250, 450],
-    "orders": [500, 600, 300]
-}
-
-note that the first line of the txt file contains the number of lines and columns of the matrix, 
-the following lines contain the matrix itself where each last number of the line is the provision for that line,
-and the last line contains the orders.
-"""
-
-def read_txt_file(file_path: str) -> str:
-    """
-    Reads a text file and returns its contents as a JSON string.
-
-    Args:
-        file_path (str): The path to the text file.
-
-    Returns:
-        str: The contents of the text file as a JSON string.
-    """
-    with open(file_path, 'r') as file:
-        # Read the first line to get the number of lines and columns
-        lines, columns = map(int, file.readline().split())
-
-        matrix: List[List[int]] = []
-        provisions: List[int] = []
-
-        # Read the matrix and provisions from the file
-        for _ in range(lines):
-            # Read each row
-            row = list(map(int, file.readline().split()))
-            # The last element of the row is the provision
-            provision = row.pop()
-            # Append the row to the matrix and the provision to the provisions list
-            matrix.append(row)
-            provisions.append(provision)
-
-        # Read the orders from the file
-        orders = list(map(int, file.readline().split()))
+        for i, file in enumerate(files):
+            print(f"{i+1}. {file}")
         
-    data: Dict[str, object] = {
-        "lines": lines,
-        "columns": columns,
-        "matrix": matrix,
-        "provisions": provisions,
-        "orders": orders
-    }
-    
-    # Convert the data dictionary to a JSON string
-    return json.dumps(data)
+        # adding "quit" option
+        print(f"{len(files)+1}. Quit")
+        
+        # get user input
+        file_number = int(input("Enter the number of the file you would like to study: "))
+
+        # validate user input
+        if file_number < 1 or file_number > len(files)+1:
+            print("Invalid input. Please try again.")
+            continue
+        
+        # quit if user selects "Quit"
+        if file_number == len(files)+1:
+            print("Goodbye!")
+            break
+
+        # get the file path
+        file_path = directory + files[file_number-1]
+        print(f"Reading file: {file_path}")
+
+        # read the file
+        json_str = read_txt_file(file_path)
+        pprint(json_str)
 
 if __name__ == "__main__":
-    file_path = "src/constraints/example.txt"
-    pprint(read_txt_file(file_path))
+    main()
+
