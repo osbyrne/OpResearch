@@ -4,6 +4,8 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from random import *
 import math
+import time
+
 
 def display_graph(datalist,p=True):
     G = nx.Graph()
@@ -23,9 +25,9 @@ def display_graph(datalist,p=True):
                 G.add_edge(f"P{i+1}", f"C{j+1}", weight=datalist[i][j])
     
     pos = nx.get_node_attributes(G, 'pos')
-    # nx.draw(G, pos, with_labels=True, node_size=1000, font_size=10, node_color='skyblue', font_color='black')
+    nx.draw(G, pos, with_labels=True, node_size=1000, font_size=10, node_color='skyblue', font_color='black')
     labels = nx.get_edge_attributes(G, 'weight')
-    # nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
     if p:
         plt.show()
     return G
@@ -202,7 +204,6 @@ def BalasHammer(datalist,order,provision,costlist):
                 columnPenalty.append(min2 - min1)
         maxiPenalty=-1
         cost=None
-        print(costlist)
         for i in range(len(linePenalty)):
             if cost==None:
                 maxiPenalty=linePenalty[i]
@@ -240,7 +241,6 @@ def BalasHammer(datalist,order,provision,costlist):
                             changei=i
                             changej=j
                             tempcost=cost
-            print(cost,maxiPenalty,changei,changej)
         for j in range(len(columnPenalty)):
             
             if columnPenalty[j]>maxiPenalty:
@@ -267,8 +267,6 @@ def BalasHammer(datalist,order,provision,costlist):
                             changei=i
                             changej=j
                             tempcost=cost
-            print(cost,maxiPenalty,changei,changej)
-        print(cost,maxiPenalty)
 
                 
         if data[changei][changej]==None:
@@ -582,3 +580,123 @@ def printingMarginal(marginal_costs):
         for j in range(len(marginal_costs[i])):
             marginal_costs[i][j]=math.sqrt(marginal_costs[i][j]**2)
     print(tabulate(marginal_costs, tablefmt="grid"))
+
+
+
+
+timeavant=time.time()   
+timemethode=0 
+for i in range(0,101):
+    i=0
+    while i==0:
+        print("Hello\nHow are you\nDo you want to test a file or to generate a random one?(1,2)")
+        k=2
+        if k==1:
+            print("Which file do you want to test?")
+            a=str(input())
+            data=readfile(a)
+            if data!=None:
+                i=1
+        elif k==2:
+            print("Which size do you want to do?")
+            #il faut modifier en dessous la size
+            size=4
+            data=randTable(size)
+            i=1
+    
+    i=0
+    
+    while i!="2" and i!="1":
+        print("Which method do you want to use? 1 for North West, 2 for Balas")
+        #modifier i pour faire balas ou northwest
+        i="2"
+    
+    (datalist,order,provision)=data
+    printing(datalist,order,provision)
+    timeavantmethode=time.time() 
+    if i=="1":   
+         (transportdata,transportorder,transportprovision)=NorthWest(datalist, order, provision)
+    else:
+        (transportdata,transportorder,transportprovision)=BalasHammer(datalist,order,provision,datalist)
+    timemethode+=time.time()-timeavantmethode
+    a=0
+    printing(transportdata,transportorder,transportprovision)
+    g=display_graph(transportdata)
+    best_improvement=None
+    err=0
+    precost=Costculation(transportdata,datalist,p=False)
+    while a==0 :
+        
+        print("start test")
+        test=testcircular(g,p=True)
+        if can_reach_all_nodes(g)==False:
+            print("The graph is degenerate")
+        while test!=1 or can_reach_all_nodes(g)==False:
+            
+            if test!=1:
+                (transportdata,g)=rectifCircular(test,transportdata, g,order,provision,best_improvement)
+            if can_reach_all_nodes(g)==False:
+                g=testContinuity(g,datalist)
+            
+            pos = nx.get_node_attributes(g, 'pos')
+            nx.draw(g, pos, with_labels=True, node_size=1000, font_size=10, node_color='skyblue', font_color='black')
+            labels = nx.get_edge_attributes(g, 'weight')
+            nx.draw_networkx_edge_labels(g, pos, edge_labels=labels)
+            plt.show()
+            test=testcircular(g)
+        print("Test finish")
+        potentials = calculate_potentials(g, datalist)
+        
+        display_potentials(potentials)
+        potential_costs = calculate_potential_costs(transportdata, potentials)
+        marginal_costs = calculate_marginal_costs(datalist, potential_costs)
+        print('the potential costs is:')
+        print(tabulate(potential_costs, tablefmt="grid"))
+        print('the marginal costs is:')
+        print(tabulate(marginal_costs, tablefmt="grid"))
+        best_improvement=detect_best_improvement(marginal_costs,transportdata)
+        if best_improvement is not None:
+            # Ici, vous pouvez ajouter du code pour effectuer les modifications nécessaires dans votre réseau de transport
+            # Par exemple, augmenter la capacité de l'arête identifiée comme amélioration potentielle
+            
+            if (err==10):
+                print("Aucune amélioration potentielle détectée.")
+                a=1
+                cost=0
+                printingMarginal(marginal_costs)
+                for i in range(len(transportdata)):
+                    for j in range(len(transportdata[i])):
+                        cost+=transportdata[i][j]*datalist[i][j]
+                print(cost)
+                break 
+            else:
+                
+                print(tabulate(marginal_costs, tablefmt="grid"))
+                print("Meilleure amélioration détectée :", best_improvement)
+                print("The current cost is")
+                postcost=Costculation(transportdata,datalist)
+                g.add_edge("P"+str(best_improvement[1]+1),"C"+str(best_improvement[0]+1))
+                if precost==postcost:
+                    err+=1
+                else:
+                    err=1
+                precost=postcost
+                
+            #printing(transportdata,transportorder,transportprovision)
+        else:
+            print("Aucune amélioration potentielle détectée.")
+            a=1
+            cost=0
+            for i in range(len(transportdata)):
+                for j in range(len(transportdata[i])):
+                    cost+=transportdata[i][j]*datalist[i][j]
+            print(cost)
+            printing(transportdata,order,provision)
+    z=None
+    while z!="1" and z!="2":
+        print("do you want to continue ? 1 for yes 2 for no")
+        z="1"
+    if z=="2":
+        break
+print('le temps est de ' + str(time.time()-timeavant))
+print("le temps pour faire la methode est de "+ str(timemethode))

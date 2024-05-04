@@ -1,142 +1,7 @@
-from tabulate import tabulate
 import copy
 import networkx as nx
-import matplotlib.pyplot as plt
-from random import *
-import math
 
-def display_graph(datalist,p=True):
-    G = nx.Graph()
-    
-    cols = len(datalist[0])
-    for j in range(cols):
-        G.add_node(f"C{j+1}", pos=(j, 1))  
-    
-    rows = len(datalist)
-    for i in range(rows):
-        G.add_node(f"P{i+1}", pos=(i, 0))
-    
-   
-    for i in range(rows):
-        for j in range(cols):
-            if datalist[i][j] != 0:
-                G.add_edge(f"P{i+1}", f"C{j+1}", weight=datalist[i][j])
-    
-    pos = nx.get_node_attributes(G, 'pos')
-    # nx.draw(G, pos, with_labels=True, node_size=1000, font_size=10, node_color='skyblue', font_color='black')
-    labels = nx.get_edge_attributes(G, 'weight')
-    # nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
-    if p:
-        plt.show()
-    return G
-
-   
-
-def readfile(url):
-    try:
-        with open(f"Data\{url}", 'r') as file:
-    
-            data=[]
-            provision=[]
-            order=[]
-            lines=file.readlines()
-            high=1
-            lenght=1
-            for i in range(len(lines)):
-                if i==0:
-                    temp=lines[i].split()
-                    high=int(temp[0])
-                    lenght=int(temp[1])
-                elif i<high+1:
-                    temp=[]
-                    d=lines[i].split()
-                    for j in range(lenght):
-                        temp.append(int(d[j]))
-                    data.append(temp)
-                    provision.append(int(d[lenght]))
-                else:
-                    d=lines[i].split()
-                    for i in d:
-                        order.append(int(i))
-            for i in range(len(provision)):
-                provision[i]=int(provision[i])                
-            return (data,order,provision)
-    except FileNotFoundError:
-        print(f"Le fichier {url} n'a pas été trouvé.")
-        return None
-    
-
-def printing(datalist, order, provision):
-    datalist_copy = copy.deepcopy(datalist)
-    order_copy = copy.deepcopy(order)
-    provision_copy = copy.deepcopy(provision)
-
-    headers = ["-"]
-    for i in range(len(datalist_copy[0])):
-        headers.append(f"C{i+1}")
-    headers.append("Provision")
-
-    for i in range(len(datalist_copy)):
-        datalist_copy[i].insert(0, f"P{i+1}")
-        datalist_copy[i].append(provision_copy[i])
-    order_copy.insert(0, "Order")
-    order_copy.append("-")
-    datalist_copy.append(order_copy)
-
-    table = tabulate(datalist_copy, headers=headers, tablefmt="grid")
-    print(table)
-    
-def printingPenalty(datalist, order, provision,linePenalty,columnPenalty):
-    datalist_copy = copy.deepcopy(datalist)
-    order_copy = copy.deepcopy(order)
-    provision_copy = copy.deepcopy(provision)
-    columnPenaltycp= copy.deepcopy(columnPenalty)
-    linePenaltycp= copy.deepcopy(linePenalty)
-    headers = ["-"]
-    for i in range(len(datalist_copy[0])):
-        headers.append(f"C{i+1}")
-    headers.append("Provision")
-    headers.append("Penalty")
-    for i in range(len(datalist_copy)):
-        datalist_copy[i].insert(0, f"P{i+1}")
-        datalist_copy[i].append(provision_copy[i])
-        if provision_copy[i]==0:
-            datalist_copy[i].append("-")
-        else:
-            datalist_copy[i].append(linePenaltycp[i])
-    order_copy.insert(0, "Order")
-    order_copy.append("-")
-    columnPenaltycp.insert(0,"Penalty")
-    columnPenaltycp.append("-")
-    for i in range(len(order_copy)):
-        if order_copy[i]==0:
-            columnPenaltycp[i]="-"
-    datalist_copy.append(order_copy)
-    datalist_copy.append(columnPenaltycp)
-    table = tabulate(datalist_copy, headers=headers, tablefmt="grid")
-    print(table)
-def NorthWest(datalist,order,provision):
-    ordercp=copy.deepcopy(order)
-    provisioncp=copy.deepcopy(provision)
-    data=[]
-    for i in datalist:
-        temp=[]
-        for j in i:
-            temp.append(0)
-        data.append(temp)
-    i=0
-    j=0
-    while(i<len(provisioncp) and j<len(ordercp)):
-        quantity=min(ordercp[j],provisioncp[i])
-        data[i][j]=quantity
-        provisioncp[i]-=quantity
-        ordercp[j]-=quantity
-        if provisioncp[i]==0:
-            i+=1
-        if ordercp[j]==0:
-            j+=1
-        printing(data,ordercp,provisioncp)
-    return(data,ordercp,provisioncp)
+from printing import printing, printingPenalty
 
 def BalasHammer(datalist,order,provision,costlist):
     datalistcp=copy.deepcopy(datalist)
@@ -222,20 +87,20 @@ def BalasHammer(datalist,order,provision,costlist):
                 changei=i
                 cost=None
                 for j in range(len(costlist[i])):
-                     if data[i][j]==None:
-                         if cost==None:
+                    if data[i][j]==None:
+                        if cost==None:
                             cost=costlist[i][j]
                             tempcost=cost
                             changej=j
-                         elif cost>costlist[i][j]:
+                        elif cost>costlist[i][j]:
                             cost=costlist[i][j]
                             changej=j
                             tempcost=cost
             elif linePenalty[i]==maxiPenalty:
                 cost=tempcost
                 for j in range(len(costlist[i])):
-                     if data[i][j]==None:
-                         if cost>costlist[i][j]:
+                    if data[i][j]==None:
+                        if cost>costlist[i][j]:
                             cost=costlist[i][j]
                             changei=i
                             changej=j
@@ -248,21 +113,21 @@ def BalasHammer(datalist,order,provision,costlist):
                 changej=j
                 cost=None
                 for i in range(len(costlist)):
-                     if data[i][j]==None:
-                         if cost==None:
+                    if data[i][j]==None:
+                        if cost==None:
                             cost=costlist[i][j]
                             tempcost=cost
                             changei=i
                                 
-                         elif cost>costlist[i][j]:
+                        elif cost>costlist[i][j]:
                             cost=costlist[i][j]
                             tempcost=cost
                             changei=i
             elif columnPenalty[j]==maxiPenalty:
                 cost=tempcost
                 for i in range(len(costlist)):
-                     if data[i][j]==None:
-                         if cost>costlist[i][j]:
+                    if data[i][j]==None:
+                        if cost>costlist[i][j]:
                             cost=costlist[i][j]
                             changei=i
                             changej=j
@@ -292,6 +157,7 @@ def BalasHammer(datalist,order,provision,costlist):
                         datalistcp[i][changej]=100000000000
             printingPenalty(data, orderprint, provisionprint,linePenalty,columnPenalty)
     return(data,ordercp,provisioncp)
+
 def Costculation(transportdata,datalist,p=True):
     cal=0
     for i in range(len(transportdata)):
@@ -300,11 +166,13 @@ def Costculation(transportdata,datalist,p=True):
     if p:
         print(cal)
     return cal
+
 def asnozero(liste):
     for i in liste:
         if i!=0:
             return 0
     return 1
+
 def testcircular(g,p=False):
     """
     Thanks to networkx librairy we can directly check if there is a cycle in our graph
@@ -324,7 +192,7 @@ def testcircular(g,p=False):
         if p:
             print("there is no cycle in this graph")
     return a
-    
+
 def rectifCircular(test,transportdata, graph,order,provision,upgrade):
     transporcp=copy.deepcopy(transportdata) 
     
@@ -437,148 +305,3 @@ def can_reach_all_nodes(graph):
             return False  # Si tous les nœuds ne sont pas accessibles, retourner False
     
     return True
-
-def calculate_potentials(graph, costs):
-    num_nodes = len(graph.nodes())
-    potentials = {}
-    for i in graph.nodes:
-        potentials[i]=None
-    
-    start_node = list(graph.nodes())[0]
-    potentials[start_node] = 0
-    todo=copy.deepcopy(graph.edges)
-    while None in potentials.values():
-        for i in todo:
-    
-            if potentials[i[0]]!=None and potentials[i[1]]==None:
-                if "C" in i[0]:
-                    ical=int(i[1][1:])-1
-                    jcal=int(i[0][1:])-1
-                    potentials[i[1]]=costs[ical][jcal]+potentials[i[0]]
-                else:
-                    ical=int(i[0][1:])-1
-                    jcal=int(i[1][1:])-1
-                    potentials[i[1]]=potentials[i[0]]-costs[ical][jcal]
-            elif potentials[i[1]]!=None and potentials[i[0]]==None:
-                if "C" in i[0]:
-                    ical=int(i[1][1:])-1
-                    jcal=int(i[0][1:])-1
-                    potentials[i[0]]=-costs[ical][jcal]+potentials[i[1]]
-                else:
-                    ical=int(i[0][1:])-1
-                    jcal=int(i[1][1:])-1
-                    potentials[i[0]]=potentials[i[1]]-costs[ical][jcal]
-    return potentials
-
-
-    
-def display_potentials(potentials):
-    print("Potentiels par sommet :")
-    for node, potential in potentials.items():
-        print(f"Sommet {node}: {potential}")
-    print()
-    
-def calculate_potential_costs(table, potentials):
-
-    potential_costs = []
-    tableC=[]
-    tableP=[]
-                
-    for i in range(len(table)):
-        tableP.append(i)
-    for i in range(len(table[0])):
-        tableC.append(i)
-    for i in range(len(tableP)):
-        temp=[]
-        for j in range(len(tableC)):
-            temp.append(potentials["P"+str(i+1)]-potentials["C"+str(j+1)])
-        potential_costs.append(temp)
-    return potential_costs
-
-def calculate_marginal_costs(costs, potential_costs):
-    marginal_costs=[]
-    for i in range(len(potential_costs)):
-        temp=[]
-        for j in range(len(potential_costs[i])):
-            temp.append(costs[i][j]-potential_costs[i][j])
-        marginal_costs.append(temp)
-    return(marginal_costs)
-
-def detect_best_improvement(marginal_costs,transportdata):
-    maxi=0
-    for i in marginal_costs:
-        for j in i:
-            if transportdata[marginal_costs.index(i)][i.index(j)]==0:
-                if maxi>j:
-                    maxi=j
-                    imaxi=marginal_costs.index(i)
-                    jmaxi=i.index(j)
-    if maxi!=0:
-        return (jmaxi,imaxi)
-
-def testContinuity(g,cost):
-    while not nx.is_connected(g):
-        connected_components = list(nx.connected_components(g))
-        i1=[]
-        j1=[]
-        i2=[]
-        j2=[]
-        for i in connected_components[0]:
-            if "C" in i:
-                j1.append(int(i[1:])-1)
-            else:
-                i1.append(int(i[1:])-1)
-        for i in connected_components[1]:
-            if "C" in i:
-                j2.append(int(i[1:])-1)
-            else:
-                i2.append(int(i[1:])-1)
-        mini=None
-        for i in i1:
-            for j in j2:
-                if mini==None:
-                    doi=i
-                    doj=j
-                    mini=cost[i][j]
-                elif mini>cost[i][j]:
-                    doi=i
-                    doj=j
-                    mini=cost[i][j]
-        for i in i2:
-            for j in j1:
-                if mini==None:
-                    doi=i
-                    doj=j
-                    mini=cost[i][j]
-                elif mini>cost[i][j]:
-                    doi=i
-                    doj=j
-                    mini=cost[i][j]
-        g.add_edge("P"+str(doi+1),"C"+str(doj+1))
-    return g
-def randTable(size):
-    datalist=[]
-    order=[]
-    sizeorder=0
-    provision=[]
-    for i in range(size):
-        temp=[]
-        ordertemp=randint(1,100)
-        sizeorder+=ordertemp
-        order.append(ordertemp)
-        for j in range(size):
-            temp.append(randint(1,100))
-        datalist.append(temp)
-    """for idx in range(size-1):
-        provision.append(randint(1,sizeorder-sum(provision)-size+idx))
-    provision.append(sizeorder-sum(provision))
-    shuffle(provision)
-    """
-    provision=copy.deepcopy(order)
-    shuffle(provision)
-    return(datalist,order,provision)
-def printingMarginal(marginal_costs):
-    for i in range(len(marginal_costs)):
-        for j in range(len(marginal_costs[i])):
-            marginal_costs[i][j]=math.sqrt(marginal_costs[i][j]**2)
-    print(tabulate(marginal_costs, tablefmt="grid"))
