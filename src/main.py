@@ -120,7 +120,7 @@ def menu():
         while z!="1" and z!="2":
             print("Do you want to continue?")
             print("1. Yes")
-            pritn("2. No")
+            print("2. No")
             z=str(input())
         if z=="2":
             break
