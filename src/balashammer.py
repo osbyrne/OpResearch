@@ -158,7 +158,7 @@ def BalasHammer(datalist,order,provision,costlist):
             printingPenalty(data, orderprint, provisionprint,linePenalty,columnPenalty)
     return(data,ordercp,provisioncp)
 
-def Costculation(transportdata,datalist,p=True):
+def Costculation(transportdata,datalist,p=True) -> int:
     cal=0
     for i in range(len(transportdata)):
         for j in range(len(transportdata[i])):
@@ -173,7 +173,7 @@ def asnozero(liste):
             return 0
     return 1
 
-def testcircular(g,p=False):
+def testcircular(g,p=False) -> bool:
     """
     Thanks to networkx librairy we can directly check if there is a cycle in our graph
     """
@@ -193,7 +193,7 @@ def testcircular(g,p=False):
             print("there is no cycle in this graph")
     return a
 
-def rectifCircular(test,transportdata, graph,order,provision,upgrade):
+def rectifCircular(test,transportdata, graph,order,provision,upgrade) -> tuple:
     transporcp=copy.deepcopy(transportdata) 
     
     do=None
@@ -248,7 +248,7 @@ def rectifCircular(test,transportdata, graph,order,provision,upgrade):
             if transporcp[i][j]==0:
                 if upgrade[1]!=i or upgrade[0]!=j:
                     graph.remove_edge(data[0],data[1])
-            
+
     else:
         for data in test:
             if do=="C":
@@ -281,6 +281,8 @@ def rectifCircular(test,transportdata, graph,order,provision,upgrade):
                 if transporcp[i][j]==0:
                     graph.remove_edge(data[0],data[1])
     return(transportdata,graph)
+
+
 def can_reach_all_nodes(graph):
     num_nodes = len(graph.nodes())
     
